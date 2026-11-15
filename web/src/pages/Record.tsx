@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { pending } from '../lib/pending.ts';
 import { formatDuration, MicError, Recorder, type MicProblem } from '../lib/recorder.ts';
+import { Dictation } from '../lib/dictation.ts';
 import { useWakeLock } from '../lib/wakelock.ts';
 import { ErrorBox, Icon, Loading, VoicePlayer } from '../components/ui.tsx';
 
@@ -22,6 +23,7 @@ export function RecordPage() {
   const { id: resumeId } = useParams();
   const navigate = useNavigate();
   const recorder = useRef<Recorder | null>(null);
+  const dictation = useRef(new Dictation());
   const [phase, setPhase] = useState<Phase>(resumeId ? 'loading' : 'idle');
   const [elapsed, setElapsed] = useState(0);
   const [mic, setMic] = useState<MicProblem | null>(null);
@@ -60,6 +62,7 @@ export function RecordPage() {
   // Leaving mid-recording must never lose audio: finish and keep it on the phone.
   useEffect(() => () => {
     const r = recorder.current;
+    dictation.current.stop();
     if (r && (r.state === 'recording' || r.state === 'paused')) void r.stop();
   }, []);
 
@@ -69,6 +72,8 @@ export function RecordPage() {
     try {
       await r.start();
       recorder.current = r;
+      dictation.current = new Dictation();
+      dictation.current.start();
       setElapsed(0);
       setPhase('recording');
     } catch (e) {
@@ -80,7 +85,9 @@ export function RecordPage() {
   const stop = async () => {
     const r = recorder.current;
     if (!r) return;
+    dictation.current.stop();
     const done = await r.stop();
+    if (dictation.current.text) await pending.setTranscript(done.id, dictation.current.text.trim());
     const rec = await pending.get(done.id);
     if (!rec || rec.chunks.length === 0) { setError('Nothing was recorded. Please try again.'); setPhase('idle'); return; }
     setSaved({ id: done.id, durationMs: done.durationMs, url: URL.createObjectURL(pending.blob(rec)) });
@@ -107,7 +114,7 @@ export function RecordPage() {
         <div className="rec-stage stack-lg">
           <div className="stack">
             <h1>Tell me the recipe</h1>
-            <p className="muted">Speak the way you normally do. Your voice is kept with the recipe.</p>
+            <p className="muted">Speak the way you normally do. Your voice is kept, and the words are typed for you.</p>
           </div>
           <button className="rec-orb" onClick={start} aria-label="Start recording"><Icon name="mic" /></button>
           <p><strong>Tap the button to start</strong></p>
@@ -131,7 +138,7 @@ export function RecordPage() {
           <p className="eyebrow">{phase === 'recording' ? '● Listening' : 'Paused'}</p>
           <div className="rec-timer" role="timer" aria-live="off">{formatDuration(elapsed)}</div>
           <button ref={orb} className={`rec-orb ${phase === 'recording' ? 'live' : 'paused'}`} aria-label={phase === 'recording' ? 'Pause' : 'Keep going'}
-            onClick={() => { const r = recorder.current!; if (phase === 'recording') { r.pause(); setPhase('paused'); } else { r.resume(); setPhase('recording'); } }}>
+            onClick={() => { const r = recorder.current!; if (phase === 'recording') { r.pause(); dictation.current.stop(); setPhase('paused'); } else { r.resume(); dictation.current.start(); setPhase('recording'); } }}>
             <Icon name={phase === 'recording' ? 'pause' : 'mic'} />
           </button>
           <p className="muted" style={{ marginTop: 14 }}>{phase === 'recording' ? 'Tap the circle to pause' : 'Tap the circle to keep going'}</p>

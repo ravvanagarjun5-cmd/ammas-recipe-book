@@ -17,9 +17,9 @@ export function parseRecipeInput(body: unknown): { error: string } | { value: Re
   const value: RecipeInput = {
     title, collection_id: str(b.collection_id), story: str(b.story), ingredients, steps, notes: str(b.notes),
     variation_note: str(b.variation_note), servings: str(b.servings), time: str(b.time), tags,
-    based_on_id: str(b.based_on_id), recording_id: str(b.recording_id),
+    based_on_id: str(b.based_on_id), recording_id: str(b.recording_id), transcript: str(b.transcript),
   };
-  if (!ingredients.length && !steps.length && !value.story && !value.notes) {
+  if (!ingredients.length && !steps.length && !value.story && !value.notes && !value.transcript) {
     return { error: 'This recipe is empty. Please add at least an ingredient, a step or a story.' };
   }
   return { value };

@@ -63,6 +63,8 @@ export function RecipePage() {
         </section>
       )}
 
+      {r.transcript && <section className="stack"><h2>What was said</h2><p style={{ whiteSpace: 'pre-wrap' }}>{r.transcript}</p></section>}
+
       {r.notes && <section className="stack"><h2>Notes</h2><p style={{ whiteSpace: 'pre-wrap' }}>{r.notes}</p></section>}
 
       <p className="muted small">Saved {date}</p>

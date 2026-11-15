@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { Collection } from '../../../shared/types.ts';
 import { api } from '../api.ts';
+import { pending } from '../lib/pending.ts';
 import { AudioCard, ErrorBox, Loading, useLoad } from '../components/ui.tsx';
 import { initialFromRecipe, RecipeEditor, type EditorInitial } from '../components/RecipeEditor.tsx';
 
@@ -42,15 +43,16 @@ export function NewRecipe() {
   const navigate = useNavigate();
   const cols = useCollections();
   const base = useLoad(() => (basedOn ? api.recipe(basedOn) : Promise.resolve(null)), [basedOn]);
+  const spoken = useLoad(async () => (recordingId ? (await pending.get(recordingId))?.transcript ?? '' : ''), [recordingId]);
 
-  if (base.loading || cols.loading) return <Loading />;
+  if (base.loading || cols.loading || spoken.loading) return <Loading />;
   if (base.error) return <ErrorBox message={base.error} onRetry={base.reload} />;
 
   const b = base.data;
   const initial: EditorInitial = b
-    ? { ...initialFromRecipe(b), title: `${b.title} (my version)`, collection_id: null, based_on_id: b.id, recording_id: null, variation_note: '' }
+    ? { ...initialFromRecipe(b), title: `${b.title} (my version)`, collection_id: null, based_on_id: b.id, recording_id: null, transcript: '', variation_note: '' }
     : {
-        title: '', collection_id: null, story: '', ingredients: [], steps: [], notes: '', variation_note: '', servings: '', time: '',
+        title: '', collection_id: null, story: '', ingredients: [], steps: [], notes: '', transcript: spoken.data ?? '', variation_note: '', servings: '', time: '',
         tags: [], based_on_id: null, recording_id: recordingId, confirmations: [],
       };
 
@@ -60,7 +62,7 @@ export function NewRecipe() {
       <h1>{b ? 'Your own version' : 'Write a recipe'}</h1>
       {b && <p className="muted">This is a copy of "{b.title}" that you can change. The original stays exactly as it was. Choose whose version it is and tell us what you changed.</p>}
       {recordingId && <AudioCard recordingId={recordingId} title="Your recording" />}
-      {recordingId && <p className="muted small">Tip: tap the microphone on your keyboard to say the recipe instead of typing it.</p>}
+      {recordingId && <p className="muted small">The words you said are typed below. Fix any mistakes, then add the ingredients and steps.</p>}
       <RecipeEditor
         initial={initial} collections={cols.all} onCollectionAdded={cols.add}
         onSave={async (input) => { const r = await api.createRecipe(input); navigate(`/recipes/${r.id}`, { replace: true }); }}

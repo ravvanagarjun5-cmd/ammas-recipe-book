@@ -8,6 +8,8 @@ export interface PendingRecording {
   /** 'recording' = interrupted mid-way (app closed / phone died); 'stopped' = finished, not yet on the server. */
   state: 'recording' | 'stopped';
   createdAt: number;
+  /** What the phone heard her say (may be empty if speech typing was not available). */
+  transcript?: string;
 }
 
 import { tx, all } from './db.ts';
@@ -26,6 +28,10 @@ export const pending = {
     const cur = (await tx<PendingRecording>('recordings', 'readonly', (s) => s.get(id))) as PendingRecording | undefined;
     if (!cur) return;
     await tx('recordings', 'readwrite', (s) => s.put({ ...cur, durationMs, state: 'stopped' } satisfies PendingRecording));
+  },
+  async setTranscript(id: string, transcript: string) {
+    const cur = (await tx<PendingRecording>('recordings', 'readonly', (s) => s.get(id))) as PendingRecording | undefined;
+    if (cur) await tx('recordings', 'readwrite', (s) => s.put({ ...cur, transcript }));
   },
   async get(id: string): Promise<PendingRecording | undefined> {
     return (await tx<PendingRecording>('recordings', 'readonly', (s) => s.get(id))) as PendingRecording | undefined;

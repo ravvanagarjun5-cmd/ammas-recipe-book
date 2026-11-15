@@ -11,6 +11,7 @@ export interface EditorInitial {
   ingredients: Ingredient[];
   steps: string[];
   notes: string;
+  transcript: string;
   variation_note: string;
   servings: string;
   time: string;
@@ -23,7 +24,7 @@ export interface EditorInitial {
 export function initialFromRecipe(r: Recipe): EditorInitial {
   return {
     title: r.title, collection_id: r.collection_id, story: r.story ?? '', ingredients: r.ingredients, steps: r.steps,
-    notes: r.notes ?? '', variation_note: r.variation_note ?? '', servings: r.servings ?? '', time: r.time ?? '', tags: r.tags,
+    notes: r.notes ?? '', transcript: r.transcript ?? '', variation_note: r.variation_note ?? '', servings: r.servings ?? '', time: r.time ?? '', tags: r.tags,
     based_on_id: r.based_on_id, recording_id: r.recording_id, confirmations: [],
   };
 }
@@ -49,6 +50,7 @@ export function RecipeEditor({ initial, collections, saveLabel = 'Save recipe', 
   const [ingredients, setIngredients] = useState<Ingredient[]>(initial.ingredients.length ? initial.ingredients : [{ item: '', quantity: null, note: null }]);
   const [steps, setSteps] = useState<string[]>(initial.steps.length ? initial.steps : ['']);
   const [notes, setNotes] = useState(initial.notes);
+  const [transcript, setTranscript] = useState(initial.transcript);
   const [variation, setVariation] = useState(initial.variation_note);
   const [basedOn, setBasedOn] = useState(initial.based_on_id);
   const [confirmations, setConfirmations] = useState(initial.confirmations);
@@ -77,7 +79,7 @@ export function RecipeEditor({ initial, collections, saveLabel = 'Save recipe', 
         ingredients: ingredients.filter((i) => i.item.trim()),
         steps: steps.filter((s) => s.trim()), notes: orNull(notes), variation_note: orNull(variation),
         servings: orNull(initial.servings), time: orNull(initial.time), tags: initial.tags,
-        based_on_id: basedOn, recording_id: initial.recording_id,
+        based_on_id: basedOn, recording_id: initial.recording_id, transcript: orNull(transcript),
       });
     } catch (e) {
       setError((e as Error).message);
@@ -151,6 +153,13 @@ export function RecipeEditor({ initial, collections, saveLabel = 'Save recipe', 
         ))}
         <button className="btn" onClick={() => setSteps((l) => [...l, ''])}>+ Add a step</button>
       </section>
+
+      {(initial.recording_id || transcript) && (
+        <label className="field">
+          <span>What you said <span className="muted">(typed from your voice, fix any mistakes)</span></span>
+          <textarea rows={6} value={transcript} onChange={(e) => setTranscript(e.target.value)} placeholder="Nothing was typed from the recording. You can tap the microphone on your keyboard and say it again here." />
+        </label>
+      )}
 
       <label className="field">
         <span>The story behind it <span className="muted">(optional)</span></span>

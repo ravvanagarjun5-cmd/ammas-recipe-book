@@ -73,6 +73,8 @@ export interface Recipe {
   based_on_id: string | null;
   based_on_title: string | null;
   recording_id: string | null;
+  /** The words she spoke, typed out by the phone. Editable; the voice recording stays as the original. */
+  transcript?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -91,6 +93,7 @@ export interface RecipeInput {
   tags: string[];
   based_on_id: string | null;
   recording_id: string | null;
+  transcript?: string | null;
 }
 
 export interface AppConfig {

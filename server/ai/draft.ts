@@ -55,8 +55,8 @@ export function searchTokens(query: string): string[] {
 
 /** One lowercase blob per recipe that search runs against. */
 export function buildSearchText(p: {
-  title: string; collection_name?: string | null; ingredients: Ingredient[]; tags: string[]; story?: string | null; notes?: string | null;
+  title: string; collection_name?: string | null; ingredients: Ingredient[]; tags: string[]; story?: string | null; notes?: string | null; transcript?: string | null;
 }): string {
-  return [p.title, p.collection_name, ...p.ingredients.map((i) => i.item), ...p.tags, p.story, p.notes]
+  return [p.title, p.collection_name, ...p.ingredients.map((i) => i.item), ...p.tags, p.story, p.notes, p.transcript]
     .filter(Boolean).join(' ').toLowerCase();
 }

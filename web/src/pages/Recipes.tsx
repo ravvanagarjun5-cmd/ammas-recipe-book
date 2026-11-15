@@ -10,6 +10,7 @@ export function Recipes() {
   const recipes = useLoad(() => api.recipes({ collection: collection ?? undefined }), [collection]);
   const file = useRef<HTMLInputElement>(null);
   const [note, setNote] = useState('');
+  const [picked, setPicked] = useState<Set<string> | null>(null); // null = normal list, a set = choosing recipes to remove
   const run = async (job: () => Promise<string>) => { try { setNote(await job()); recipes.reload(); } catch (e) { setNote((e as Error).message); } };
 
   return (
@@ -36,8 +37,25 @@ export function Recipes() {
       )}
 
       <div className="stack">
-        {(recipes.data ?? []).map((r) => <RecipeCard key={r.id} recipe={r} />)}
+        {(recipes.data ?? []).map((r) => picked ? (
+          <label key={r.id} className="card flat row" style={{ gap: 12, alignItems: 'center' }}>
+            <input type="checkbox" style={{ width: 28, height: 28 }} checked={picked.has(r.id)}
+              onChange={() => setPicked((p) => { const n = new Set(p); if (!n.delete(r.id)) n.add(r.id); return n; })} />
+            <strong>{r.title}</strong>
+          </label>
+        ) : <RecipeCard key={r.id} recipe={r} />)}
       </div>
+
+      {picked ? (
+        <div className="stack">
+          <button className="btn danger block" disabled={picked.size === 0} onClick={async () => {
+            if (!window.confirm(`Remove ${picked.size} recipe${picked.size === 1 ? '' : 's'}? Your recordings will be kept.`)) return;
+            await Promise.all([...picked].map((id) => api.deleteRecipe(id)));
+            setPicked(null); recipes.reload();
+          }}>Remove {picked.size || ''} selected</button>
+          <button className="btn block" onClick={() => setPicked(null)}>Cancel</button>
+        </div>
+      ) : (recipes.data?.length ?? 0) > 0 && <button className="btn block" onClick={() => setPicked(new Set())}>Choose recipes to remove</button>}
 
       <Link className="btn block" to="/recipes/new">Write a recipe by typing</Link>
 
