@@ -1,0 +1,38 @@
+{
+  "name": "ammas-recipe-book",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev:server": "node --watch --env-file-if-exists=.env server/index.ts",
+    "dev:web": "vite --config web/vite.config.ts",
+    "build": "vite build --config web/vite.config.ts",
+    "start": "node --env-file-if-exists=.env server/index.ts",
+    "test": "node --test \"test/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "hash-passphrase": "node scripts/hash-passphrase.ts",
+    "compare-stt": "node --env-file-if-exists=.env scripts/compare-stt.ts",
+    "phone": "node --env-file-if-exists=.env scripts/phone.ts",
+    "eval-structure": "node --env-file-if-exists=.env scripts/eval-structure.ts",
+    "icons": "python scripts/make-icons.py"
+  },
+  "dependencies": {
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/nunito-sans": "^5.3.0",
+    "@hono/node-server": "^2.1.4",
+    "hono": "^4.13.13",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router-dom": "^7.18.4"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  }
+}
